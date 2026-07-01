@@ -1,0 +1,1948 @@
+{
+  "name": "Automação de NFs",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -144
+      ],
+      "id": "b0fcb45d-7849-4706-a888-ec65131f4c47",
+      "name": "Baixar Anexo",
+      "webhookId": "e6326494-0f61-46d6-a2ef-31ed0f76f71b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F2N5zx3p7r1ltlEG",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "q": "has:attachment",
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -320,
+        -144
+      ],
+      "id": "f025c0dd-1745-4351-9a29-115d4da73e5e",
+      "name": "Novo E-mail Recebido",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F2N5zx3p7r1ltlEG",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        320
+      ],
+      "id": "8a2f1360-4480-46e3-9737-ff801244e194",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeZ7aCnBdEiCztUq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        368
+      ],
+      "id": "7788bac5-6515-4ce3-bc42-a2a9b719283f",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeZ7aCnBdEiCztUq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=analise a seguinte nota fiscal, cuja transcrição vou deixar abaixo. Quero que avalie se setrata de uma NF de prestação de serviços ou de venda de produtos. Responda apenas com \"Venda\" ou \"Serviço\". Segue a transcrição:\n\n {{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -112,
+        128
+      ],
+      "id": "4476c4c9-f542-4030-bc06-9b4fcfba22e2",
+      "name": "É NF de Venda ou Servico?"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        -144
+      ],
+      "id": "9645d782-f57f-4385-9532-2ba778a9bd1b",
+      "name": "Marcar com lida",
+      "webhookId": "e6a7b7e2-a38d-428c-ae88-9c78c1c81a79",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F2N5zx3p7r1ltlEG",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "text": "Estou enviado uma NF. Quero que você leia e transcreva todos os dados dessa NF. Responda essa mensagem apenas com a transcrição e nada mais.",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        128
+      ],
+      "id": "89e4caf5-3fb9-424f-ab37-3d47bf4f4d34",
+      "name": "Transcrever NF",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeZ7aCnBdEiCztUq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0a9bafc-8223-4f7d-9a54-2d16e3b6134c",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "Serviço",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        128
+      ],
+      "id": "0d2e2c58-a483-4417-b8a9-3753b4b5e165",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Transcrever NF').item.json.content.parts[0].text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Nº NF",
+              "description": "Nº NF",
+              "required": true
+            },
+            {
+              "name": "Data emissão",
+              "type": "date",
+              "description": "Data emissão"
+            },
+            {
+              "name": "Competência",
+              "description": "Competência"
+            },
+            {
+              "name": "Valor total",
+              "type": "number",
+              "description": "Valor total"
+            },
+            {
+              "name": "CNPJ/CPF Emissor",
+              "description": "CNPJ/CPF Emissor",
+              "required": true
+            },
+            {
+              "name": "Nome/Razão social emissor",
+              "description": "Nome/Razão social emissor"
+            },
+            {
+              "name": "CEP Emissor",
+              "description": "CEP Emissor"
+            },
+            {
+              "name": "UF Emissor",
+              "description": "UF Emissor"
+            },
+            {
+              "name": "Endereço Emissor",
+              "description": "Endereço Emissor"
+            },
+            {
+              "name": "E-mail Emissor",
+              "description": "E-mail Emissor"
+            },
+            {
+              "name": "CPF/CNPJ Tomador",
+              "description": "CPF/CNPJ Tomador"
+            },
+            {
+              "name": "Nome/Razão social Tomador",
+              "description": "Nome/Razão social Tomador"
+            },
+            {
+              "name": "CEP Tomador",
+              "description": "CEP Tomador"
+            },
+            {
+              "name": "UF Tomador",
+              "description": "UF Tomador"
+            },
+            {
+              "name": "Endereço Tomador",
+              "description": "Endereço Tomador"
+            },
+            {
+              "name": "E-mail tomador",
+              "description": "E-mail tomador"
+            },
+            {
+              "name": "Discriminação produto/serviço",
+              "description": "Discriminação produto/serviço"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        128
+      ],
+      "id": "cd335ecb-180a-46c6-a661-613129534ea3",
+      "name": "Extrator de NF de Serviços"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88",
+          "mode": "list",
+          "cachedResultName": "Controle de Faturas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Serviços",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nº NF": "={{ $json.output['Nº NF'] }}",
+            "Data emissão": "={{ $json.output['Data emissão'] }}",
+            "Competência": "={{ $json.output['Competência'] }}",
+            "Valor total": "={{ $json.output['Valor total'] }}",
+            "CNPJ/CPF Emissor": "={{ $json.output['CNPJ/CPF Emissor'] }}",
+            "Nome/Razão social emissor": "={{ $json.output['Nome/Razão social emissor'] }}",
+            "CEP Emissor": "={{ $json.output['CEP Emissor'] }}",
+            "UF Emissor": "={{ $json.output['UF Emissor'] }}",
+            "Endereço Emissor": "={{ $json.output['Endereço Emissor'] }}",
+            "E-mail Emissor": "={{ $json.output['E-mail Emissor'] }}",
+            "CPF/CNPJ Tomador": "={{ $json.output['CPF/CNPJ Tomador'] }}",
+            "Nome/Razão social Tomador": "={{ $json.output['Nome/Razão social Tomador'] }}",
+            "CEP Tomador": "={{ $json.output['CEP Tomador'] }}",
+            "UF Tomador": "={{ $json.output['UF Tomador'] }}",
+            "Endereço Tomador": "={{ $json.output['Endereço Tomador'] }}",
+            "E-mail tomador": "={{ $json.output['E-mail tomador'] }}",
+            "Discriminação produto/serviço": "={{ $json.output['Discriminação produto/serviço'] }}",
+            "Tipo operação": "={{ $('É NF de Venda ou Servico?').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nº NF",
+              "displayName": "Nº NF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data emissão",
+              "displayName": "Data emissão",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Competência",
+              "displayName": "Competência",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo operação",
+              "displayName": "Tipo operação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor total",
+              "displayName": "Valor total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CNPJ/CPF Emissor",
+              "displayName": "CNPJ/CPF Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome/Razão social emissor",
+              "displayName": "Nome/Razão social emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP Emissor",
+              "displayName": "CEP Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UF Emissor",
+              "displayName": "UF Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço Emissor",
+              "displayName": "Endereço Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-mail Emissor",
+              "displayName": "E-mail Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CPF/CNPJ Tomador",
+              "displayName": "CPF/CNPJ Tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome/Razão social Tomador",
+              "displayName": "Nome/Razão social Tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP Tomador",
+              "displayName": "CEP Tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UF Tomador",
+              "displayName": "UF Tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço Tomador",
+              "displayName": "Endereço Tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-mail tomador",
+              "displayName": "E-mail tomador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Discriminação produto/serviço",
+              "displayName": "Discriminação produto/serviço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        128
+      ],
+      "id": "501e4c6b-f33b-4b6b-8656-899a0ad27958",
+      "name": "Inserir NF Serviços na Planilha",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rqNis5oM5OdzqS18",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        704
+      ],
+      "id": "bee94d27-4e48-4609-90d8-e675afc2e958",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IeZ7aCnBdEiCztUq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Transcrever NF').item.json.content.parts[0].text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Nº NF",
+              "type": "number",
+              "description": "Nº NF",
+              "required": true
+            },
+            {
+              "name": "Data emissão",
+              "type": "date",
+              "description": "Data emissão"
+            },
+            {
+              "name": "Valor total",
+              "description": "Valor total"
+            },
+            {
+              "name": "CNPJ Emissor",
+              "description": "CNPJ Emissor"
+            },
+            {
+              "name": "Inscrição estadual Emissor",
+              "description": "Inscrição estadual Emissor",
+              "required": true
+            },
+            {
+              "name": "Razão social emissor",
+              "description": "Razão social emissor"
+            },
+            {
+              "name": "CEP Emissor",
+              "description": "CEP Emissor"
+            },
+            {
+              "name": "UF Emissor",
+              "description": "UF Emissor"
+            },
+            {
+              "name": "Endereço Emissor",
+              "description": "Endereço Emissor"
+            },
+            {
+              "name": "CPF/CNPJ Destinatário",
+              "description": "CPF/CNPJ Destinatário"
+            },
+            {
+              "name": "Nome/Razão social Destinatário",
+              "description": "Nome/Razão social Destinatário"
+            },
+            {
+              "name": "Endereço Destinatário",
+              "description": "Endereço Destinatário"
+            },
+            {
+              "name": "CEP Destinatário",
+              "description": "CEP Destinatário"
+            },
+            {
+              "name": "UF Destinatário",
+              "description": "UF Destinatário"
+            },
+            {
+              "name": "Nome/Razão social Transportador",
+              "description": "Nome/Razão social Transportador"
+            },
+            {
+              "name": "CNPJ/CPF Transportador",
+              "description": "CNPJ/CPF Transportador"
+            },
+            {
+              "name": "Inscrição estadual Transportador",
+              "description": "Inscrição estadual Transportador"
+            },
+            {
+              "name": "UF Transportador",
+              "description": "UF Transportador"
+            },
+            {
+              "name": "Endereço transportador",
+              "description": "Endereço transportador"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        512
+      ],
+      "id": "9d5c4161-c7a2-47ca-9d67-18550b2fc79a",
+      "name": "Extrator de NF de Vendas"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88",
+          "mode": "list",
+          "cachedResultName": "Controle de Faturas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 285292933,
+          "mode": "list",
+          "cachedResultName": "Vendas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OmsYufjTLMNUGEnQIpyYsx_cKN2__T1zYDzDJhzzJ88/edit#gid=285292933"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nº NF": "={{ $json.output['Nº NF'] }}",
+            "Data emissão": "={{ $json.output['Data emissão'] }}",
+            "Valor total": "={{ $json.output['Valor total'] }}",
+            "CNPJ Emissor": "={{ $json.output['CNPJ Emissor'] }}",
+            "Inscrição estadual Emissor": "={{ $json.output['Inscrição estadual Emissor'] }}",
+            "Razão social emissor": "={{ $json.output['Razão social emissor'] }}",
+            "CEP Emissor": "={{ $json.output['CEP Emissor'] }}",
+            "UF Emissor": "={{ $json.output['UF Emissor'] }}",
+            "Endereço Emissor": "={{ $json.output['Endereço Emissor'] }}",
+            "CPF/CNPJ Destinatário": "={{ $json.output['CPF/CNPJ Destinatário'] }}",
+            "Nome/Razão social Destinatário": "={{ $json.output['Nome/Razão social Destinatário'] }}",
+            "Endereço Destinatário": "={{ $json.output['Endereço Destinatário'] }}",
+            "CEP Destinatário": "={{ $json.output['CEP Destinatário'] }}",
+            "UF Destinatário": "={{ $json.output['UF Destinatário'] }}",
+            "Nome/Razão social Transportador": "={{ $json.output['Nome/Razão social Transportador'] }}",
+            "CNPJ/CPF Transportador": "={{ $json.output['CNPJ/CPF Transportador'] }}",
+            "UF Transportador": "={{ $json.output['UF Transportador'] }}",
+            "Tipo operação": "={{ $('É NF de Venda ou Servico?').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nº NF",
+              "displayName": "Nº NF",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data emissão",
+              "displayName": "Data emissão",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo operação",
+              "displayName": "Tipo operação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Valor total",
+              "displayName": "Valor total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CNPJ Emissor",
+              "displayName": "CNPJ Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Inscrição estadual Emissor",
+              "displayName": "Inscrição estadual Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Razão social emissor",
+              "displayName": "Razão social emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP Emissor",
+              "displayName": "CEP Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UF Emissor",
+              "displayName": "UF Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço Emissor",
+              "displayName": "Endereço Emissor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CPF/CNPJ Destinatário",
+              "displayName": "CPF/CNPJ Destinatário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome/Razão social Destinatário",
+              "displayName": "Nome/Razão social Destinatário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço Destinatário",
+              "displayName": "Endereço Destinatário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP Destinatário",
+              "displayName": "CEP Destinatário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UF Destinatário",
+              "displayName": "UF Destinatário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome/Razão social Transportador",
+              "displayName": "Nome/Razão social Transportador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CNPJ/CPF Transportador",
+              "displayName": "CNPJ/CPF Transportador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Inscrição estadual Transportador",
+              "displayName": "Inscrição estadual Transportador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UF Transportador",
+              "displayName": "UF Transportador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço transportador",
+              "displayName": "Endereço transportador",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        512
+      ],
+      "id": "151af4cf-b18a-4700-a3ae-12388a5f3660",
+      "name": "Inserir NF Vendas na planilha",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rqNis5oM5OdzqS18",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic",
+          "mode": "list",
+          "cachedResultName": "Conciliação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Chave": "={{ $json['CNPJ/CPF Emissor'] }}{{ $json['Nº NF'] }}",
+            "Status": "Recebido"
+          },
+          "matchingColumns": [
+            "Chave"
+          ],
+          "schema": [
+            {
+              "id": "Chave",
+              "displayName": "Chave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo_documento",
+              "displayName": "tipo_documento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "numero_nota",
+              "displayName": "numero_nota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "serie",
+              "displayName": "serie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "chave_acesso",
+              "displayName": "chave_acesso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_emissao",
+              "displayName": "data_emissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_nome",
+              "displayName": "emitente_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_cnpj_cpf",
+              "displayName": "emitente_cnpj_cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_municipio",
+              "displayName": "emitente_municipio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_uf",
+              "displayName": "emitente_uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_inscricao_municipal",
+              "displayName": "emitente_inscricao_municipal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_endereco",
+              "displayName": "emitente_endereco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_cep",
+              "displayName": "emitente_cep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_telefone",
+              "displayName": "emitente_telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_email",
+              "displayName": "emitente_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_nome",
+              "displayName": "destinatario_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_cnpj_cpf",
+              "displayName": "destinatario_cnpj_cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_municipio",
+              "displayName": "destinatario_municipio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_uf",
+              "displayName": "destinatario_uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_inscricao_municipal",
+              "displayName": "destinatario_inscricao_municipal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_endereco",
+              "displayName": "destinatario_endereco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_cep",
+              "displayName": "destinatario_cep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_telefone",
+              "displayName": "destinatario_telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_email",
+              "displayName": "destinatario_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "natureza_operacao",
+              "displayName": "natureza_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cfop",
+              "displayName": "cfop",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descricao_item_servico",
+              "displayName": "descricao_item_servico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_unitario",
+              "displayName": "valor_unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "base_calculo_icms",
+              "displayName": "base_calculo_icms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_icms",
+              "displayName": "valor_icms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transportadora",
+              "displayName": "transportadora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cnpj_transportadora",
+              "displayName": "cnpj_transportadora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status_extracao",
+              "displayName": "status_extracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "codigo_verificacao",
+              "displayName": "codigo_verificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "competencia",
+              "displayName": "competencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "base_calculo_iss",
+              "displayName": "base_calculo_iss",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_iss",
+              "displayName": "valor_iss",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        128
+      ],
+      "id": "cf7a1c48-6d00-4fb5-95c8-bd0fccca2cee",
+      "name": "Conciliação de NF",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rqNis5oM5OdzqS18",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic",
+          "mode": "list",
+          "cachedResultName": "Conciliação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TOKUpoyhl4QsbSemAjeC8x9fTt0QyvE6prJ7W78z3ic/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Chave": "={{ $json['CNPJ Emissor'] }}{{ $json['Nº NF'] }}",
+            "Status": "Recebido"
+          },
+          "matchingColumns": [
+            "Chave"
+          ],
+          "schema": [
+            {
+              "id": "Chave",
+              "displayName": "Chave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tipo_documento",
+              "displayName": "tipo_documento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "numero_nota",
+              "displayName": "numero_nota",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "serie",
+              "displayName": "serie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "chave_acesso",
+              "displayName": "chave_acesso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_emissao",
+              "displayName": "data_emissao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_nome",
+              "displayName": "emitente_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_cnpj_cpf",
+              "displayName": "emitente_cnpj_cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_municipio",
+              "displayName": "emitente_municipio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_uf",
+              "displayName": "emitente_uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_inscricao_municipal",
+              "displayName": "emitente_inscricao_municipal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_endereco",
+              "displayName": "emitente_endereco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_cep",
+              "displayName": "emitente_cep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_telefone",
+              "displayName": "emitente_telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emitente_email",
+              "displayName": "emitente_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_nome",
+              "displayName": "destinatario_nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_cnpj_cpf",
+              "displayName": "destinatario_cnpj_cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_municipio",
+              "displayName": "destinatario_municipio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_uf",
+              "displayName": "destinatario_uf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_inscricao_municipal",
+              "displayName": "destinatario_inscricao_municipal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_endereco",
+              "displayName": "destinatario_endereco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_cep",
+              "displayName": "destinatario_cep",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_telefone",
+              "displayName": "destinatario_telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario_email",
+              "displayName": "destinatario_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "natureza_operacao",
+              "displayName": "natureza_operacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cfop",
+              "displayName": "cfop",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descricao_item_servico",
+              "displayName": "descricao_item_servico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantidade",
+              "displayName": "quantidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_unitario",
+              "displayName": "valor_unitario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_total",
+              "displayName": "valor_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "base_calculo_icms",
+              "displayName": "base_calculo_icms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_icms",
+              "displayName": "valor_icms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transportadora",
+              "displayName": "transportadora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cnpj_transportadora",
+              "displayName": "cnpj_transportadora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status_extracao",
+              "displayName": "status_extracao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "codigo_verificacao",
+              "displayName": "codigo_verificacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "competencia",
+              "displayName": "competencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "base_calculo_iss",
+              "displayName": "base_calculo_iss",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor_iss",
+              "displayName": "valor_iss",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        512
+      ],
+      "id": "762576ee-4b74-448c-8727-37186d9659e2",
+      "name": "Conciliação de NF1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rqNis5oM5OdzqS18",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const newItems = [];\nconst item = items[0];\n\nfor (const key of Object.keys(item.binary)) {\n  const file = item.binary[key];\n  const isPdf = file.mimeType === 'application/pdf';\n\n  if (isPdf) {\n    newItems.push({\n      json: item.json,\n      binary: {\n        data: file\n      }\n    });\n  }\n}\n\nreturn newItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -144
+      ],
+      "id": "dcb599c6-aa3c-47c1-ae25-85b68969bd5a",
+      "name": "Passa Apenas PDF"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        -144
+      ],
+      "id": "435f94e2-2942-4f2f-9d59-499d89a8eaa1",
+      "name": "Loop até acabar os PDFs"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Novo E-mail Recebido": {
+      "main": [
+        [
+          {
+            "node": "Marcar com lida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Anexo": {
+      "main": [
+        [
+          {
+            "node": "Passa Apenas PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extrator de NF de Serviços",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "É NF de Venda ou Servico?",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É NF de Venda ou Servico?": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar com lida": {
+      "main": [
+        [
+          {
+            "node": "Baixar Anexo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcrever NF": {
+      "main": [
+        [
+          {
+            "node": "É NF de Venda ou Servico?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extrator de NF de Serviços",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extrator de NF de Vendas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrator de NF de Serviços": {
+      "main": [
+        [
+          {
+            "node": "Inserir NF Serviços na Planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extrator de NF de Vendas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrator de NF de Vendas": {
+      "main": [
+        [
+          {
+            "node": "Inserir NF Vendas na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir NF Serviços na Planilha": {
+      "main": [
+        [
+          {
+            "node": "Conciliação de NF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir NF Vendas na planilha": {
+      "main": [
+        [
+          {
+            "node": "Conciliação de NF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conciliação de NF": {
+      "main": [
+        [
+          {
+            "node": "Loop até acabar os PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conciliação de NF1": {
+      "main": [
+        [
+          {
+            "node": "Loop até acabar os PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Passa Apenas PDF": {
+      "main": [
+        [
+          {
+            "node": "Loop até acabar os PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop até acabar os PDFs": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Transcrever NF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "21cf6bf3-bfbe-4baa-9443-ecce155f8bf9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6ec9d52d2e19f16f3a34db2a9074e49f6a09f05e257a75cf9c4ecf90f53fb18e"
+  },
+  "nodeGroups": [],
+  "id": "t9SzEdtPmO5p4mN9",
+  "tags": []
+}
