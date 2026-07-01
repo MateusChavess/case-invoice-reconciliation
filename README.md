@@ -1,6 +1,6 @@
 # ⚙️ Case: Invoice Reconciliation Automação de Conciliação de Notas Fiscais
 
-Atividade acadêmica desenvolvida como parte da pós-graduação em **Data Analytics e AI for Business** pela FNAT (Fundação de Negócios, Analytics e Tecnologia) — 2026.
+Atividade acadêmica desenvolvida como parte da pós-graduação em **Data Analytics e AI for Business** pela FNAT (Fundação de Negócios, Analytics e Tecnologia) 2026.
 
 ---
 
